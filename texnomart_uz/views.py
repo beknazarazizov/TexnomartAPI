@@ -5,15 +5,15 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from texnomart_uz.models import Category, Product, Key, Value
 from texnomart_uz.serializers import CategorySerializer, ProductModelSerializer, ProductSerializer, AttributeSerializer, \
     KeySerializer, ValueSerializer
 
 
 class CategoryListAPI(generics.ListAPIView):
-    permission_classes = (IsAuthenticated,)
-    authentication_classes = (TokenAuthentication,)
+    # permission_classes = (IsAuthenticated,)
+    # authentication_classes = (TokenAuthentication,)
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
@@ -63,8 +63,8 @@ class DeleteCategoryView(generics.DestroyAPIView):
 
 
 class ProductListAPI(ListAPIView):
-    # permission_classes = [IsAuthenticated]
-    # authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
     serializer_class = ProductSerializer
     queryset = Product.objects.all()
 

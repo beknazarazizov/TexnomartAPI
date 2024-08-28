@@ -21,10 +21,19 @@ from django.urls import path, include
 
 from root import settings
 from root.custam_token import CustomToken
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
+
+from root.custom_obtain_view import MyTokenObtainPairView
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api-auth/', include('rest_framework.urls')),
     path('texnomart-uz/', include('texnomart_uz.urls')),
     path('texnomart-uz/token-auth/',CustomToken.as_view()),
+    path('texnomart-uz/api/token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('texnomart-uz/api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
 ]
