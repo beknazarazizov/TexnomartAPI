@@ -1,0 +1,37 @@
+Ustoz siz bergan url  lar bilan birga bir qilgamman
+product va categoriy uchun permission va authenticate larini kamentariyaga olib qoygamman
+tekshorish uchun qulay bo'lgani
+permishin va token larni tekshirayotganingizda kamentariyadan chiqarib olasiz .Raxmat
+
+
+# categories
+1.texnomart-uz/categories  => all categories data
+2.texnomart-uz/category/category_slug/  => o’sha category slugdagi hamma productlar chiqadi,product_primary_image ham
+3.texnomart-uz/category/  =>  add-category
+4.texnomart-uz/category/category_slug/delete  =>  o`chiradi
+5.texnomart-uz/category/ category_slug/edit   =>  o'zgartiradi
+# products
+6. texnomart-uz/product/detail/product_id/ => productni hamma ma’lumoti ,  is_liked, comment_count , all_images, attributes
+7. texnomart-uz/product/product_id /edit/   => praductni edite qiladi
+8. texnomart-uz/product/product_id /delete/  =>  delete qiladi
+
+# attribute_key
+9.texnomart-uz/attribute-key/ => all attribute keys
+10. texnomart-uz/attribute-value/ => all attribute values
+12.texnomart-uz/token-auth/ => token authentication
+token authentication faqat category uchun qilindi
+login qilib kirganda ham token beradi
+
+13.texnomart-uz/api/token => jwtni access token   accses va refresh tokenlar olinadi
+14.texnomart-uz/api/token/refresh/ => refresh token orqali access token olamiz.
+ accsec token uchun 1 minut vaqt berilgan
+Refresh token orqali acces olinadi
+
+Another task
+Signals => category , product => category yoki product yaratilgandan so’ng sms yuboriladi. (post_save)
+
+Delete qilgan vaqti products / categories >  pre_delete json faylga saqlab olasizlar
+
+Cache => File Based , Custom cached
+Django Rest Filter , Django Rest Search
+

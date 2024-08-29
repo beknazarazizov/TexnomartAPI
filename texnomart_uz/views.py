@@ -1,14 +1,33 @@
+import django_filters
+from django.core.cache import cache
 from django.shortcuts import render, get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, status
 from rest_framework.authentication import  TokenAuthentication
+from rest_framework.exceptions import NotFound
+from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from texnomart_uz.models import Category, Product, Key, Value
+from texnomart_uz.permissions import CustomPermission
 from texnomart_uz.serializers import CategorySerializer, ProductModelSerializer, ProductSerializer, AttributeSerializer, \
     KeySerializer, ValueSerializer
+
+
+class CategoryPagination(PageNumberPagination):
+    page_size = 10
+
+
+class CategoryFilter(django_filters.FilterSet):
+    name = django_filters.CharFilter(lookup_expr='icontains')
+
+    class Meta:
+        model = Category
+        fields = ['title']
 
 
 class CategoryListAPI(generics.ListAPIView):
@@ -16,6 +35,21 @@ class CategoryListAPI(generics.ListAPIView):
     # authentication_classes = (TokenAuthentication,)
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
+    filterset_class = CategoryFilter
+    search_fields = ['title']
+    ordering_fields = '__all__'
+    ordering = ['title']
+    pagination_class = CategoryPagination
+
+    def get_queryset(self):
+        cache_key = 'category_list_' + str(self.request.query_params)
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return cached_data
+        queryset = super().get_queryset()
+        cache.set(cache_key, queryset, timeout=60 * 15)
+        return queryset
 
 
 class CreateCategoryView(generics.CreateAPIView):
@@ -62,16 +96,44 @@ class DeleteCategoryView(generics.DestroyAPIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+class ProductPagination(PageNumberPagination):
+    page_size = 10
+
+
+class ProductFilter(django_filters.FilterSet):
+    name = django_filters.CharFilter(lookup_expr='icontains')
+    category = django_filters.CharFilter(field_name='category__title', lookup_expr='icontains')
+
+    class Meta:
+        model = Product
+        fields = ['name', 'category']
+
+
 class ProductListAPI(ListAPIView):
-    permission_classes = [IsAuthenticated]
-    authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAuthenticated]
+    # authentication_classes = [JWTAuthentication]
     serializer_class = ProductSerializer
     queryset = Product.objects.all()
+    pagination_class = ProductPagination
+    filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
+    filterset_class = ProductFilter
+    search_fields = ['name', 'product__name']
+    ordering_fields = '__all__'
+    ordering = ['name']
 
     def get_queryset(self):
-        category_slug = self.kwargs['category_slug']
-        queryset = Product.objects.filter(category__slug=category_slug)
+        category_slug = self.kwargs.get('category_slug')
+        if not category_slug:
+            raise NotFound("Category slug not provided")
+        category = get_object_or_404(Category, slug=category_slug)
+        queryset = Product.objects.filter(category=category).select_related('category')
         return queryset
+
+
+    # def get_queryset(self):
+    #     category_slug = self.kwargs['category_slug']
+    #     queryset = Product.objects.filter(category__slug=category_slug)
+    #     return queryset
 
 
 class ProductDetailView(RetrieveAPIView):
